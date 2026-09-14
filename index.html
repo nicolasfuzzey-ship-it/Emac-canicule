@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>À l'Ombre — IMT Mines Albi</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- FontAwesome pour les icônes -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts (Inter) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .leaflet-control-zoom a { color: #334155 !important; }
+        .marker-anim { transition: transform 0.2s ease-in-out; }
+        .marker-anim:hover { transform: scale(1.15); z-index: 1000 !important; }
+        .tab-btn.active {
+            border-bottom: 3px solid #ef4444;
+            color: #1e293b;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 h-screen flex flex-col overflow-hidden">
+
+    <!-- Bannière d'Alerte Canicule -->
+    <div id="alert-banner" class="bg-red-600 text-white px-4 py-3 shadow-md flex items-center justify-center relative z-20 shrink-0">
+        <div class="absolute inset-0 bg-red-500 animate-ping opacity-20"></div>
+        <div class="relative z-10 flex items-center space-x-3 text-center sm:text-left">
+            <i class="fa-solid fa-triangle-exclamation text-2xl animate-pulse"></i>
+            <div>
+                <span class="font-bold uppercase tracking-wide text-sm sm:text-base" id="banner-status">Alerte Canicule</span>
+                <span class="hidden sm:inline"> &bull; </span>
+                <span class="block sm:inline text-sm" id="banner-text">Chargement des données Météo-France...</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- En-tête Navigation par Onglets -->
+    <header class="bg-white border-b border-slate-200 z-20 shrink-0">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
+            <div class="flex items-center space-x-3">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/e/e4/Logo_IMT_Mines_Albi.svg" alt="IMT Mines Albi" class="h-8 w-auto" onerror="this.src='https://placehold.co/100x40/ffffff/000000?text=IMT+Albi'">
+                <span class="text-xl font-bold text-slate-800">À l'Ombre</span>
+            </div>
+            <nav class="flex space-x-6 h-full">
+                <button class="tab-btn active h-full px-2 flex items-center text-slate-600 hover:text-slate-900 font-medium text-sm transition-colors" data-view="carte">
+                    <i class="fa-solid fa-map-location-dot mr-2"></i>Carte du Campus
+                </button>
+                <button class="tab-btn h-full px-2 flex items-center text-slate-600 hover:text-slate-900 font-medium text-sm transition-colors" data-view="volets">
+                    <i class="fa-solid fa-window-maximize mr-2"></i>Volets & Fenêtres
+                </button>
+                <button class="tab-btn h-full px-2 flex items-center text-slate-600 hover:text-slate-900 font-medium text-sm transition-colors" data-view="conseils">
+                    <i class="fa-solid fa-user-shield mr-2"></i>Conseils & Urgences
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- VUE 1 : CARTE DU CAMPUS -->
+    <div id="view-carte" class="view-content flex flex-col lg:flex-row flex-1 overflow-hidden">
+        <aside class="w-full lg:w-96 bg-white border-r border-slate-200 shadow-xl flex flex-col shrink-0 z-10 h-1/3 lg:h-full overflow-y-auto">
+            <div class="p-6 border-b border-slate-100 bg-gradient-to-br from-white to-slate-50">
+                <h1 class="text-xl font-bold text-slate-800 leading-tight">Oasis Campus</h1>
+                <p class="text-xs text-slate-500 mt-1">Carte interactive des zones de rafraîchissement</p>
+            </div>
+
+            <!-- Légende -->
+            <div class="p-6 border-b border-slate-100">
+                <h2 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center">
+                    <i class="fa-solid fa-temperature-half mr-2"></i> Températures de surface
+                </h2>
+                <div class="space-y-3 text-sm">
+                    <div class="flex items-center"><div class="w-5 h-5 rounded bg-blue-500/40 border border-blue-500 mr-3"></div><span>Frais (&lt; 28°C)</span></div>
+                    <div class="flex items-center"><div class="w-5 h-5 rounded bg-emerald-500/40 border border-emerald-500 mr-3"></div><span>Agréable (28°C - 32°C)</span></div>
+                    <div class="flex items-center"><div class="w-5 h-5 rounded bg-orange-500/40 border border-orange-500 mr-3"></div><span>Chaud (33°C - 37°C)</span></div>
+                    <div class="flex items-center"><div class="w-5 h-5 rounded bg-red-600/40 border border-red-600 mr-3"></div><span>Îlot de chaleur (&gt; 38°C)</span></div>
+                </div>
+            </div>
+
+            <!-- Filtres -->
+            <div class="p-6 flex-1">
+                <h2 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center">
+                    <i class="fa-solid fa-filter mr-2"></i> Équipements
+                </h2>
+                <div class="space-y-3">
+                    <label class="flex items-center p-3 border rounded-xl hover:bg-slate-50 cursor-pointer transition-colors">
+                        <input type="checkbox" id="filter-water" class="w-4 h-4 text-blue-600 rounded" checked>
+                        <span class="ml-3 text-sm font-medium"><i class="fa-solid fa-droplet text-blue-500 mr-2"></i>Fontaines à eau</span>
+                    </label>
+                    <label class="flex items-center p-3 border rounded-xl hover:bg-slate-50 cursor-pointer transition-colors">
+                        <input type="checkbox" id="filter-shade" class="w-4 h-4 text-green-600 rounded" checked>
+                        <span class="ml-3 text-sm font-medium"><i class="fa-solid fa-tree text-green-500 mr-2"></i>Ombre & Voie Verte</span>
+                    </label>
+                    <label class="flex items-center p-3 border rounded-xl hover:bg-slate-50 cursor-pointer transition-colors">
+                        <input type="checkbox" id="filter-umbrella" class="w-4 h-4 text-emerald-500 rounded" checked>
+                        <span class="ml-3 text-sm font-medium"><i class="fa-solid fa-umbrella text-emerald-500 mr-2"></i>Ombrelles éphémères</span>
+                    </label>
+                    <label class="flex items-center p-3 border rounded-xl hover:bg-slate-50 cursor-pointer transition-colors">
+                        <input type="checkbox" id="filter-kiosk" class="w-4 h-4 text-purple-600 rounded" checked>
+                        <span class="ml-3 text-sm font-medium"><i class="fa-solid fa-store text-purple-500 mr-2"></i>Kiosques Fraîcheur</span>
+                    </label>
+                </div>
+            </div>
+        </aside>
+
+        <main class="flex-1 relative h-2/3 lg:h-full w-full">
+            <div id="map" class="absolute inset-0 z-0"></div>
+        </main>
+    </div>
+
+    <!-- VUE 2 : VOLETS ET FENÊTRES -->
+    <div id="view-volets" class="view-content flex-1 overflow-y-auto p-6 hidden">
+        <div class="max-w-4xl mx-auto space-y-6">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <h2 class="text-xl font-bold text-slate-800 mb-2">Quand fermer/ouvrir vos volets ?</h2>
+                <p class="text-sm text-slate-600 mb-6">L'outil calcule les meilleurs créneaux horaires en fonction des prévisions météo réelles pour le campus d'Albi.</p>
+                
+                <div class="flex flex-wrap items-center gap-4 p-4 bg-slate-50 rounded-xl">
+                    <label for="seuil" class="text-sm font-medium text-slate-700">Seuil de confort intérieur : <span id="seuilVal" class="font-bold text-blue-600">26°C</span></label>
+                    <input type="range" id="seuil" min="20" max="30" value="26" step="1" class="w-48 accent-blue-600">
+                    <button id="btnCalc" class="bg-blue-600 text-white px-5 py-2 rounded-lg font-medium text-sm hover:bg-blue-700 transition-colors">Actualiser les calculs</button>
+                </div>
+            </div>
+
+            <div id="voletsResults" class="space-y-4"></div>
+        </div>
+    </div>
+
+    <!-- VUE 3 : CONSEILS ET URGENCES -->
+    <div id="view-conseils" class="view-content flex-1 overflow-y-auto p-6 hidden">
+        <div class="max-w-4xl mx-auto space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                    <h3 class="font-bold text-lg text-amber-600 mb-3 flex items-center"><i class="fa-solid fa-sun mr-2"></i>Avant la vague de chaleur</h3>
+                    <ul class="space-y-2 text-sm text-slate-600 list-disc list-inside">
+                        <li>Fermez volets et fenêtres exposés dès le matin.</li>
+                        <li>Repérez la pièce la plus fraîche de votre résidence.</li>
+                        <li>Préparez des bouteilles d'eau et brumisateurs.</li>
+                        <li>Coupez les appareils électriques en veille.</li>
+                    </ul>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                    <h3 class="font-bold text-lg text-red-600 mb-3 flex items-center"><i class="fa-solid fa-temperature-arrow-up mr-2"></i>Pendant la vague de chaleur</h3>
+                    <ul class="space-y-2 text-sm text-slate-600 list-disc list-inside">
+                        <li>Buvez régulièrement sans attendre d'avoir soif.</li>
+                        <li>Mouillez votre corps plusieurs fois par jour.</li>
+                        <li>Évitez toute activité physique entre 12h et 16h.</li>
+                        <li>Aérez uniquement la nuit si la température a chuté.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="bg-slate-900 text-white p-6 rounded-2xl shadow-md">
+                <h3 class="font-bold text-lg mb-4 flex items-center"><i class="fa-solid fa-phone-volume mr-2 text-red-400"></i>Numéros d'Urgence</h3>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <div class="bg-slate-800 p-4 rounded-xl text-center"><a href="tel:15"><div class="text-2xl font-black text-red-400">15</div><div class="text-xs text-slate-400">SAMU</div></a></div>
+                    <div class="bg-slate-800 p-4 rounded-xl text-center"><a href="tel:18"><div class="text-2xl font-black text-red-400">18</div><div class="text-xs text-slate-400">Pompiers</div></a></div>
+                    <div class="bg-slate-800 p-4 rounded-xl text-center"><a href="tel:112"><div class="text-2xl font-black text-red-400">112</div><div class="text-xs text-slate-400">Urgences EU</div></a></div>
+                    <div class="bg-slate-800 p-4 rounded-xl text-center"><a href="tel:0800066666"><div class="text-xs font-bold text-red-400 mt-2">0800 06 66 66</div><div class="text-xs text-slate-400">Canicule Info</div></a></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script Application -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const campusCoords = [43.9222, 2.1778];
+
+            // 1. Gestion de la Navigation par Onglets
+            const tabs = document.querySelectorAll('.tab-btn');
+            const views = document.querySelectorAll('.view-content');
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    views.forEach(v => v.classList.add('hidden'));
+
+                    tab.classList.add('active');
+                    const targetView = document.getElementById(`view-${tab.dataset.view}`);
+                    targetView.classList.remove('hidden');
+
+                    if (tab.dataset.view === 'carte' && map) {
+                        setTimeout(() => map.invalidateSize(), 100);
+                    }
+                });
+            });
+
+            // 2. Initialisation de la Carte Leaflet
+            const map = L.map('map', { center: campusCoords, zoom: 17, minZoom: 15, maxZoom: 19, zoomControl: false });
+            L.control.zoom({ position: 'topright' }).addTo(map);
+
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; OpenStreetMap &copy; CARTO'
+            }).addTo(map);
+
+            // Zones thermiques
+            const zoneStyles = {
+                cool: { color: '#3b82f6', fillColor: '#3b82f6', fillOpacity: 0.25, weight: 1 },
+                pleasant: { color: '#10b981', fillColor: '#10b981', fillOpacity: 0.25, weight: 1 },
+                warm: { color: '#f97316', fillColor: '#f97316', fillOpacity: 0.25, weight: 1 },
+                hot: { color: '#dc2626', fillColor: '#dc2626', fillOpacity: 0.3, weight: 1 }
+            };
+
+            [
+                L.circle([43.9230, 2.1745], { radius: 95, ...zoneStyles.cool }),
+                L.circle([43.9224, 2.1770], { radius: 70, ...zoneStyles.pleasant }),
+                L.circle([43.9228, 2.1790], { radius: 65, ...zoneStyles.warm }),
+                L.circle([43.9205, 2.1778], { radius: 110, ...zoneStyles.hot })
+            ].forEach(z => z.addTo(map));
+
+            // Marqueurs Équipements
+            const createIcon = (iconClass, colorClass, bgColorClass, borderColorClass) => L.divIcon({
+                html: `<div class="marker-anim w-10 h-10 rounded-full bg-white shadow-lg flex items-center justify-center border-2 ${borderColorClass} relative"><div class="absolute inset-0 rounded-full ${bgColorClass} opacity-20"></div><i class="${iconClass} ${colorClass} text-lg relative z-10"></i></div>`,
+                className: '', iconSize: [40, 40], iconAnchor: [20, 20], popupAnchor: [0, -22]
+            });
+
+            const icons = {
+                water: createIcon('fa-solid fa-droplet', 'text-blue-600', 'bg-blue-500', 'border-blue-500'),
+                shade: createIcon('fa-solid fa-tree', 'text-green-600', 'bg-green-500', 'border-green-500'),
+                umbrella: createIcon('fa-solid fa-umbrella', 'text-emerald-500', 'bg-emerald-500', 'border-emerald-500'),
+                kiosk: createIcon('fa-solid fa-store', 'text-purple-600', 'bg-purple-500', 'border-purple-500')
+            };
+
+            const layerGroups = {
+                water: L.layerGroup().addTo(map),
+                shade: L.layerGroup().addTo(map),
+                umbrella: L.layerGroup().addTo(map),
+                kiosk: L.layerGroup().addTo(map)
+            };
+
+            const poiData = {
+                water: [{ coords: [43.9225, 2.1782], title: "Fontaine Cour d'Honneur", desc: "Eau fraîche 24/7." }],
+                shade: [{ coords: [43.9231, 2.1748], title: "Bosquet Nord", desc: "Zone de hamacs ombragée." }],
+                umbrella: [{ coords: [43.9223, 2.1775], title: "Ombrelles Campus", desc: "Structure textile anti-UV." }],
+                kiosk: [{ coords: [43.9221, 2.1792], title: "Kiosque BDE", desc: "Brumisateurs à disposition." }]
+            };
+
+            Object.keys(poiData).forEach(cat => {
+                poiData[cat].forEach(poi => {
+                    L.marker(poi.coords, { icon: icons[cat] })
+                        .bindPopup(`<div class="p-1"><h3 class="font-bold text-slate-800 text-sm">${poi.title}</h3><p class="text-xs text-slate-600">${poi.desc}</p></div>`)
+                        .addTo(layerGroups[cat]);
+                });
+            });
+
+            const bindFilter = (id, cat) => {
+                document.getElementById(id).addEventListener('change', (e) => {
+                    if (e.target.checked) map.addLayer(layerGroups[cat]);
+                    else map.removeLayer(layerGroups[cat]);
+                });
+            };
+            bindFilter('filter-water', 'water');
+            bindFilter('filter-shade', 'shade');
+            bindFilter('filter-umbrella', 'umbrella');
+            bindFilter('filter-kiosk', 'kiosk');
+
+            // 3. Intégration API Météo (Météo-France via Open-Meteo)
+            const seuilInput = document.getElementById('seuil');
+            const seuilVal = document.getElementById('seuilVal');
+            let cachedForecast = null;
+
+            seuilInput.addEventListener('input', () => {
+                seuilVal.textContent = seuilInput.value + '°C';
+                if (cachedForecast) renderVolets(cachedForecast, Number(seuilInput.value));
+            });
+
+            async function fetchMeteoData() {
+                try {
+                    const url = `https://api.open-meteo.com/v1/forecast?latitude=${campusCoords[0]}&longitude=${campusCoords[1]}&hourly=temperature_2m&current_weather=true&forecast_days=3&timezone=Europe%2FParis`;
+                    const res = await fetch(url);
+                    const data = await res.json();
+                    
+                    cachedForecast = data.hourly;
+                    
+                    // MàJ Bannière avec température réelle Météo France
+                    const temp = data.current_weather.temperature;
+                    document.getElementById('banner-text').textContent = `Température actuelle sur le campus : ${temp}°C. Suivez nos consignes d'aération.`;
+                    
+                    renderVolets(cachedForecast, Number(seuilInput.value));
+                } catch (e) {
+                    document.getElementById('banner-text').textContent = "Données météo temporairement indisponibles.";
+                }
+            }
+
+            document.getElementById('btnCalc').addEventListener('click', fetchMeteoData);
+
+            function renderVolets(hourly, threshold) {
+                const container = document.getElementById('voletsResults');
+                container.innerHTML = '';
+
+                const days = {};
+                hourly.time.forEach((t, i) => {
+                    const date = t.slice(0, 10);
+                    (days[date] = days[date] || []).push({ time: t, temp: hourly.temperature_2m[i] });
+                });
+
+                Object.keys(days).slice(0, 3).forEach(date => {
+                    const entries = days[date];
+                    let max = Math.max(...entries.map(e => e.temp));
+                    let min = Math.min(...entries.map(e => e.temp));
+                    let maxIdx = entries.findIndex(e => e.temp === max);
+
+                    let closeIdx = entries.findIndex((e, i) => i <= maxIdx && e.temp >= threshold);
+                    let openIdx = entries.findIndex((e, i) => i > maxIdx && e.temp < threshold);
+
+                    const card = document.createElement('div');
+                    card.className = "bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4";
+                    card.innerHTML = `
+                        <div>
+                            <h4 class="font-bold text-slate-800">${new Date(date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}</h4>
+                            <p class="text-xs text-slate-500">Min: ${min}°C | Max: ${max}°C</p>
+                        </div>
+                        <div class="flex gap-4 text-sm">
+                            <div class="p-3 bg-red-50 rounded-xl border border-red-100">
+                                <span class="block text-xs text-red-600 font-semibold">Fermer volets</span>
+                                <span class="font-bold text-slate-800">${closeIdx !== -1 ? entries[closeIdx].time.slice(11, 16) : 'Inutile / Déjà chaud'}</span>
+                            </div>
+                            <div class="p-3 bg-blue-50 rounded-xl border border-blue-100">
+                                <span class="block text-xs text-blue-600 font-semibold">Rouvrir fenêtres</span>
+                                <span class="font-bold text-slate-800">${openIdx !== -1 ? entries[openIdx].time.slice(11, 16) : 'Nuit chaude'}</span>
+                            </div>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+            }
+
+            // Premier chargement automatique de la météo
+            fetchMeteoData();
+        });
+    </script>
+</body>
+</html>
