@@ -74,52 +74,50 @@
 
     <!-- VUE 1 : CARTE DU CAMPUS -->
     <div id="view-carte" class="view-content flex flex-col lg:flex-row flex-1 overflow-hidden">
-        <aside class="w-full lg:w-96 bg-white border-r border-slate-200 shadow-xl flex flex-col shrink-0 z-10 h-1/3 lg:h-full overflow-y-auto">
+        <aside class="w-full lg:w-96 bg-white border-r border-slate-200 shadow-xl flex flex-col shrink-0 z-10 h-1/2 lg:h-full overflow-y-auto">
             <div class="p-6 border-b border-slate-100 bg-gradient-to-br from-white to-slate-50">
                 <h1 class="text-xl font-bold text-slate-800 leading-tight">Oasis Campus</h1>
-                <p class="text-xs text-slate-500 mt-1">Carte interactive des zones de rafraîchissement</p>
+                <p class="text-xs text-slate-500 mt-1">Cliquez sur la carte pour ajouter un signalement.</p>
             </div>
 
-            <!-- Légende -->
+            <!-- Légende et Filtres -->
             <div class="p-6 border-b border-slate-100">
                 <h2 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center">
-                    <i class="fa-solid fa-temperature-half mr-2"></i> Températures de surface
-                </h2>
-                <div class="space-y-3 text-sm">
-                    <div class="flex items-center"><div class="w-5 h-5 rounded bg-blue-500/40 border border-blue-500 mr-3"></div><span>Frais (&lt; 28°C)</span></div>
-                    <div class="flex items-center"><div class="w-5 h-5 rounded bg-emerald-500/40 border border-emerald-500 mr-3"></div><span>Agréable (28°C - 32°C)</span></div>
-                    <div class="flex items-center"><div class="w-5 h-5 rounded bg-orange-500/40 border border-orange-500 mr-3"></div><span>Chaud (33°C - 37°C)</span></div>
-                    <div class="flex items-center"><div class="w-5 h-5 rounded bg-red-600/40 border border-red-600 mr-3"></div><span>Îlot de chaleur (&gt; 38°C)</span></div>
-                </div>
-            </div>
-
-            <!-- Filtres -->
-            <div class="p-6 flex-1">
-                <h2 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center">
-                    <i class="fa-solid fa-filter mr-2"></i> Équipements
+                    <i class="fa-solid fa-filter mr-2"></i> Afficher sur la carte
                 </h2>
                 <div class="space-y-3">
-                    <label class="flex items-center p-3 border rounded-xl hover:bg-slate-50 cursor-pointer transition-colors">
+                    <label class="flex items-center p-2 border rounded-xl hover:bg-slate-50 cursor-pointer transition-colors">
                         <input type="checkbox" id="filter-water" class="w-4 h-4 text-blue-600 rounded" checked>
-                        <span class="ml-3 text-sm font-medium"><i class="fa-solid fa-droplet text-blue-500 mr-2"></i>Fontaines à eau</span>
+                        <span class="ml-3 text-sm font-medium"><i class="fa-solid fa-droplet text-blue-500 mr-2"></i>Points d'eau</span>
                     </label>
-                    <label class="flex items-center p-3 border rounded-xl hover:bg-slate-50 cursor-pointer transition-colors">
+                    <label class="flex items-center p-2 border rounded-xl hover:bg-slate-50 cursor-pointer transition-colors">
                         <input type="checkbox" id="filter-shade" class="w-4 h-4 text-green-600 rounded" checked>
-                        <span class="ml-3 text-sm font-medium"><i class="fa-solid fa-tree text-green-500 mr-2"></i>Ombre & Voie Verte</span>
+                        <span class="ml-3 text-sm font-medium"><i class="fa-solid fa-tree text-green-500 mr-2"></i>Zones de fraîcheur</span>
                     </label>
-                    <label class="flex items-center p-3 border rounded-xl hover:bg-slate-50 cursor-pointer transition-colors">
-                        <input type="checkbox" id="filter-umbrella" class="w-4 h-4 text-emerald-500 rounded" checked>
-                        <span class="ml-3 text-sm font-medium"><i class="fa-solid fa-umbrella text-emerald-500 mr-2"></i>Ombrelles éphémères</span>
+                    <label class="flex items-center p-2 border rounded-xl hover:bg-slate-50 cursor-pointer transition-colors">
+                        <input type="checkbox" id="filter-heat" class="w-4 h-4 text-red-600 rounded" checked>
+                        <span class="ml-3 text-sm font-medium"><i class="fa-solid fa-fire text-red-500 mr-2"></i>Zones chaudes</span>
                     </label>
-                    <label class="flex items-center p-3 border rounded-xl hover:bg-slate-50 cursor-pointer transition-colors">
+                    <label class="flex items-center p-2 border rounded-xl hover:bg-slate-50 cursor-pointer transition-colors">
                         <input type="checkbox" id="filter-kiosk" class="w-4 h-4 text-purple-600 rounded" checked>
                         <span class="ml-3 text-sm font-medium"><i class="fa-solid fa-store text-purple-500 mr-2"></i>Kiosques Fraîcheur</span>
                     </label>
                 </div>
             </div>
+
+            <!-- Signalements communautaires -->
+            <div class="p-6 flex-1">
+                <h2 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center justify-between">
+                    <span><i class="fa-solid fa-list mr-2"></i> Signalements</span>
+                    <span id="signalement-count" class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-semibold">0</span>
+                </h2>
+                <ul id="markerList" class="space-y-3 text-sm max-h-60 overflow-y-auto pr-1">
+                    <li class="text-slate-400 italic text-xs">Chargement des points...</li>
+                </ul>
+            </div>
         </aside>
 
-        <main class="flex-1 relative h-2/3 lg:h-full w-full">
+        <main class="flex-1 relative h-1/2 lg:h-full w-full">
             <div id="map" class="absolute inset-0 z-0"></div>
         </main>
     </div>
@@ -182,8 +180,25 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const campusCoords = [43.9222, 2.1778];
+            const STORAGE_KEY = 'al_ombre_user_markers';
 
-            // 1. Gestion de la Navigation par Onglets
+            // Types de marqueurs et styles
+            const CATEGORIES = {
+                water: { label: "Point d'eau", icon: 'fa-droplet', color: 'text-blue-600', bg: 'bg-blue-500', border: 'border-blue-500' },
+                shade: { label: "Zone de fraîcheur / Ombre", icon: 'fa-tree', color: 'text-green-600', bg: 'bg-green-500', border: 'border-green-500' },
+                heat: { label: "Zone chaude / Ensoleillée", icon: 'fa-fire', color: 'text-red-600', bg: 'bg-red-500', border: 'border-red-500' },
+                kiosk: { label: "Kiosque / Équipement", icon: 'fa-store', color: 'text-purple-600', bg: 'bg-purple-500', border: 'border-purple-500' }
+            };
+
+            let markersData = [];
+            const layerGroups = {
+                water: L.layerGroup(),
+                shade: L.layerGroup(),
+                heat: L.layerGroup(),
+                kiosk: L.layerGroup()
+            };
+
+            // 1. Navigation Onglets
             const tabs = document.querySelectorAll('.tab-btn');
             const views = document.querySelectorAll('.view-content');
 
@@ -202,7 +217,7 @@
                 });
             });
 
-            // 2. Initialisation de la Carte Leaflet
+            // 2. Initialisation Carte
             const map = L.map('map', { center: campusCoords, zoom: 17, minZoom: 15, maxZoom: 19, zoomControl: false });
             L.control.zoom({ position: 'topright' }).addTo(map);
 
@@ -210,56 +225,152 @@
                 attribution: '&copy; OpenStreetMap &copy; CARTO'
             }).addTo(map);
 
-            // Zones thermiques
-            const zoneStyles = {
-                cool: { color: '#3b82f6', fillColor: '#3b82f6', fillOpacity: 0.25, weight: 1 },
-                pleasant: { color: '#10b981', fillColor: '#10b981', fillOpacity: 0.25, weight: 1 },
-                warm: { color: '#f97316', fillColor: '#f97316', fillOpacity: 0.25, weight: 1 },
-                hot: { color: '#dc2626', fillColor: '#dc2626', fillOpacity: 0.3, weight: 1 }
-            };
+            Object.values(layerGroups).forEach(group => group.addTo(map));
 
-            [
-                L.circle([43.9230, 2.1745], { radius: 95, ...zoneStyles.cool }),
-                L.circle([43.9224, 2.1770], { radius: 70, ...zoneStyles.pleasant }),
-                L.circle([43.9228, 2.1790], { radius: 65, ...zoneStyles.warm }),
-                L.circle([43.9205, 2.1778], { radius: 110, ...zoneStyles.hot })
-            ].forEach(z => z.addTo(map));
-
-            // Marqueurs Équipements
-            const createIcon = (iconClass, colorClass, bgColorClass, borderColorClass) => L.divIcon({
-                html: `<div class="marker-anim w-10 h-10 rounded-full bg-white shadow-lg flex items-center justify-center border-2 ${borderColorClass} relative"><div class="absolute inset-0 rounded-full ${bgColorClass} opacity-20"></div><i class="${iconClass} ${colorClass} text-lg relative z-10"></i></div>`,
-                className: '', iconSize: [40, 40], iconAnchor: [20, 20], popupAnchor: [0, -22]
-            });
-
-            const icons = {
-                water: createIcon('fa-solid fa-droplet', 'text-blue-600', 'bg-blue-500', 'border-blue-500'),
-                shade: createIcon('fa-solid fa-tree', 'text-green-600', 'bg-green-500', 'border-green-500'),
-                umbrella: createIcon('fa-solid fa-umbrella', 'text-emerald-500', 'bg-emerald-500', 'border-emerald-500'),
-                kiosk: createIcon('fa-solid fa-store', 'text-purple-600', 'bg-purple-500', 'border-purple-500')
-            };
-
-            const layerGroups = {
-                water: L.layerGroup().addTo(map),
-                shade: L.layerGroup().addTo(map),
-                umbrella: L.layerGroup().addTo(map),
-                kiosk: L.layerGroup().addTo(map)
-            };
-
-            const poiData = {
-                water: [{ coords: [43.9225, 2.1782], title: "Fontaine Cour d'Honneur", desc: "Eau fraîche 24/7." }],
-                shade: [{ coords: [43.9231, 2.1748], title: "Bosquet Nord", desc: "Zone de hamacs ombragée." }],
-                umbrella: [{ coords: [43.9223, 2.1775], title: "Ombrelles Campus", desc: "Structure textile anti-UV." }],
-                kiosk: [{ coords: [43.9221, 2.1792], title: "Kiosque BDE", desc: "Brumisateurs à disposition." }]
-            };
-
-            Object.keys(poiData).forEach(cat => {
-                poiData[cat].forEach(poi => {
-                    L.marker(poi.coords, { icon: icons[cat] })
-                        .bindPopup(`<div class="p-1"><h3 class="font-bold text-slate-800 text-sm">${poi.title}</h3><p class="text-xs text-slate-600">${poi.desc}</p></div>`)
-                        .addTo(layerGroups[cat]);
+            // Icônes dynamiques
+            const createIcon = (catKey) => {
+                const cat = CATEGORIES[catKey] || CATEGORIES.shade;
+                return L.divIcon({
+                    html: `<div class="marker-anim w-10 h-10 rounded-full bg-white shadow-lg flex items-center justify-center border-2 ${cat.border} relative"><div class="absolute inset-0 rounded-full ${cat.bg} opacity-20"></div><i class="fa-solid ${cat.icon} ${cat.color} text-lg relative z-10"></i></div>`,
+                    className: '', iconSize: [40, 40], iconAnchor: [20, 20], popupAnchor: [0, -22]
                 });
+            };
+
+            // Chargement et Sauvegarde
+            function loadMarkers() {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) {
+                    try { markersData = JSON.parse(saved); } catch (e) { markersData = []; }
+                } else {
+                    markersData = [
+                        { id: '1', coords: [43.9225, 2.1782], cat: 'water', title: "Fontaine Cour d'Honneur", note: "Eau fraîche 24/7." },
+                        { id: '2', coords: [43.9231, 2.1748], cat: 'shade', title: "Bosquet Nord", note: "Zone ombragée avec bancs." },
+                        { id: '3', coords: [43.9205, 2.1778], cat: 'heat', title: "Parking Sud", note: "Plein soleil, très chaud l'après-midi." }
+                    ];
+                    saveMarkers();
+                }
+                renderMarkers();
+            }
+
+            function saveMarkers() {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(markersData));
+            }
+
+            function renderMarkers() {
+                Object.values(layerGroups).forEach(g => g.clearLayers());
+                const listEl = document.getElementById('markerList');
+                listEl.innerHTML = '';
+
+                document.getElementById('signalement-count').textContent = markersData.length;
+
+                if (markersData.length === 0) {
+                    listEl.innerHTML = '<li class="text-slate-400 italic text-xs">Aucun signalement. Cliquez sur la carte pour en ajouter un !</li>';
+                    return;
+                }
+
+                markersData.forEach(item => {
+                    const cat = CATEGORIES[item.cat] || CATEGORIES.shade;
+                    
+                    // Ajout Marqueur
+                    const marker = L.marker(item.coords, { icon: createIcon(item.cat) });
+                    marker.bindPopup(`
+                        <div class="p-1">
+                            <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                                <i class="fa-solid ${cat.icon} ${cat.color}"></i> ${item.title}
+                            </h3>
+                            ${item.note ? `<p class="text-xs text-slate-600 mt-1">${item.note}</p>` : ''}
+                        </div>
+                    `);
+                    if (layerGroups[item.cat]) {
+                        marker.addTo(layerGroups[item.cat]);
+                    }
+
+                    // Ajout Liste Latérale
+                    const li = document.createElement('li');
+                    li.className = 'p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-start justify-between gap-2';
+                    li.innerHTML = `
+                        <div class="flex-1">
+                            <div class="font-semibold text-slate-800 flex items-center text-xs">
+                                <i class="fa-solid ${cat.icon} ${cat.color} mr-1.5"></i> ${item.title}
+                            </div>
+                            ${item.note ? `<div class="text-xs text-slate-500 mt-0.5">${item.note}</div>` : ''}
+                        </div>
+                        <button class="delete-btn text-slate-400 hover:text-red-600 p-1 transition-colors" data-id="${item.id}" title="Supprimer">
+                            <i class="fa-solid fa-trash-can text-xs"></i>
+                        </button>
+                    `;
+                    listEl.appendChild(li);
+                });
+
+                // Attacher événements de suppression
+                document.querySelectorAll('.delete-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const id = e.currentTarget.dataset.id;
+                        markersData = markersData.filter(m => m.id !== id);
+                        saveMarkers();
+                        renderMarkers();
+                    });
+                });
+            }
+
+            // Ajout dynamique au clic sur la carte
+            map.on('click', (e) => {
+                const formHtml = `
+                    <div class="p-2 space-y-3 min-w-[200px]">
+                        <h4 class="font-bold text-slate-800 text-sm">Ajouter un signalement</h4>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600 mb-1">Type de lieu</label>
+                            <select id="new-cat" class="w-full text-xs p-2 border border-slate-300 rounded-lg">
+                                <option value="shade">🌳 Zone de fraîcheur / Ombre</option>
+                                <option value="water">💧 Point d'eau</option>
+                                <option value="heat">🔥 Zone chaude / Ensoleillée</option>
+                                <option value="kiosk">🏪 Kiosque / Équipement</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600 mb-1">Titre</label>
+                            <input type="text" id="new-title" class="w-full text-xs p-2 border border-slate-300 rounded-lg" placeholder="Ex: Banc à l'ombre" required>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600 mb-1">Note (optionnel)</label>
+                            <input type="text" id="new-note" class="w-full text-xs p-2 border border-slate-300 rounded-lg" placeholder="Ex: Reste frais l'après-midi">
+                        </div>
+                        <button id="save-marker-btn" class="w-full bg-blue-600 text-white text-xs font-semibold py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                            Enregistrer
+                        </button>
+                    </div>
+                `;
+
+                const popup = L.popup()
+                    .setLatLng(e.latlng)
+                    .setContent(formHtml)
+                    .openOn(map);
+
+                setTimeout(() => {
+                    const saveBtn = document.getElementById('save-marker-btn');
+                    if (saveBtn) {
+                        saveBtn.addEventListener('click', () => {
+                            const cat = document.getElementById('new-cat').value;
+                            const title = document.getElementById('new-title').value.trim() || CATEGORIES[cat].label;
+                            const note = document.getElementById('new-note').value.trim();
+
+                            markersData.push({
+                                id: Date.now().toString(),
+                                coords: [e.latlng.lat, e.latlng.lng],
+                                cat,
+                                title,
+                                note
+                            });
+
+                            saveMarkers();
+                            renderMarkers();
+                            map.closePopup();
+                        });
+                    }
+                }, 50);
             });
 
+            // Filtres
             const bindFilter = (id, cat) => {
                 document.getElementById(id).addEventListener('change', (e) => {
                     if (e.target.checked) map.addLayer(layerGroups[cat]);
@@ -268,10 +379,10 @@
             };
             bindFilter('filter-water', 'water');
             bindFilter('filter-shade', 'shade');
-            bindFilter('filter-umbrella', 'umbrella');
+            bindFilter('filter-heat', 'heat');
             bindFilter('filter-kiosk', 'kiosk');
 
-            // 3. Intégration API Météo (Météo-France via Open-Meteo)
+            // 3. Météo API
             const seuilInput = document.getElementById('seuil');
             const seuilVal = document.getElementById('seuilVal');
             let cachedForecast = null;
@@ -288,8 +399,6 @@
                     const data = await res.json();
                     
                     cachedForecast = data.hourly;
-                    
-                    // MàJ Bannière avec température réelle Météo France
                     const temp = data.current_weather.temperature;
                     document.getElementById('banner-text').textContent = `Température actuelle sur le campus : ${temp}°C. Suivez nos consignes d'aération.`;
                     
@@ -342,7 +451,8 @@
                 });
             }
 
-            // Premier chargement automatique de la météo
+            // Chargement initial
+            loadMarkers();
             fetchMeteoData();
         });
     </script>
