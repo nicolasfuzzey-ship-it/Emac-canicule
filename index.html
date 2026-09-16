@@ -316,57 +316,70 @@
             }
 
             // Ajout au clic sur la carte
-            map.on('click', (e) => {
-                const formHtml = `
-                    <div class="p-2 space-y-2 min-w-[180px]">
-                        <h4 class="font-bold text-slate-800 text-xs">Nouveau signalement</h4>
-                        <div>
-                            <select id="new-cat" class="w-full text-xs p-1.5 border border-slate-300 rounded-lg">
-                                <option value="shade">🌳 Ombre</option>
-                                <option value="water">💧 Eau</option>
-                                <option value="heat">🔥 Zone chaude</option>
-                                <option value="kiosk">🏪 Kiosque</option>
-                            </select>
-                        </div>
-                        <div>
-                            <input type="text" id="new-title" class="w-full text-xs p-1.5 border border-slate-300 rounded-lg" placeholder="Titre (ex: Banc ombre)" required>
-                        </div>
-                        <div>
-                            <input type="text" id="new-note" class="w-full text-xs p-1.5 border border-slate-300 rounded-lg" placeholder="Note (optionnel)">
-                        </div>
-                        <button id="save-marker-btn" class="w-full bg-blue-600 text-white text-xs font-semibold py-1.5 rounded-lg hover:bg-blue-700 transition-colors">
-                            Enregistrer
-                        </button>
-                    </div>
-                `;
+            // Remplacez le bloc map.on('click') par celui-ci :
+map.on('click contextmenu', (e) => {
+    // Évite le menu contextuel natif du navigateur si appui long sur mobile
+    if (e.originalEvent) {
+        e.originalEvent.preventDefault();
+    }
 
-                const popup = L.popup()
-                    .setLatLng(e.latlng)
-                    .setContent(formHtml)
-                    .openOn(map);
+    const formHtml = `
+        <div class="p-2 space-y-2 min-w-[200px]">
+            <h4 class="font-bold text-slate-800 text-xs">Nouveau signalement</h4>
+            <div>
+                <select id="new-cat" class="w-full text-xs p-2 border border-slate-300 rounded-lg bg-white">
+                    <option value="shade">🌳 Ombre</option>
+                    <option value="water">💧 Eau</option>
+                    <option value="heat">🔥 Zone chaude</option>
+                    <option value="kiosk">🏪 Kiosque</option>
+                </select>
+            </div>
+            <div>
+                <input type="text" id="new-title" class="w-full text-xs p-2 border border-slate-300 rounded-lg" placeholder="Titre (ex: Banc ombre)" required>
+            </div>
+            <div>
+                <input type="text" id="new-note" class="w-full text-xs p-2 border border-slate-300 rounded-lg" placeholder="Note (optionnel)">
+            </div>
+            <button id="save-marker-btn" class="w-full bg-blue-600 text-white text-xs font-semibold py-2 rounded-lg hover:bg-blue-700 active:bg-blue-800 transition-colors">
+                Enregistrer
+            </button>
+        </div>
+    `;
 
-                setTimeout(() => {
-                    const saveBtn = document.getElementById('save-marker-btn');
-                    if (saveBtn) {
-                        saveBtn.addEventListener('click', () => {
-                            const cat = document.getElementById('new-cat').value;
-                            const title = document.getElementById('new-title').value.trim() || CATEGORIES[cat].label;
-                            const note = document.getElementById('new-note').value.trim();
+    const popup = L.popup({
+        keepInView: true,
+        autoPanPadding: [20, 20]
+    })
+    .setLatLng(e.latlng)
+    .setContent(formHtml)
+    .openOn(map);
 
-                            // Envoi vers Firebase
-                            markersRef.push({
-                                coords: [e.latlng.lat, e.latlng.lng],
-                                cat: cat,
-                                title: title,
-                                note: note,
-                                createdAt: Date.now()
-                            });
-                            
-                            map.closePopup();
-                        });
-                    }
-                }, 50);
-            });
+    // Écoute des événements tactiles et clics sur le bouton
+    setTimeout(() => {
+        const saveBtn = document.getElementById('save-marker-btn');
+        if (saveBtn) {
+            const handleSave = (event) => {
+                event.preventDefault();
+                const cat = document.getElementById('new-cat').value;
+                const title = document.getElementById('new-title').value.trim() || CATEGORIES[cat].label;
+                const note = document.getElementById('new-note').value.trim();
+
+                markersRef.push({
+                    coords: [e.latlng.lat, e.latlng.lng],
+                    cat: cat,
+                    title: title,
+                    note: note,
+                    createdAt: Date.now()
+                });
+                
+                map.closePopup();
+            };
+
+            saveBtn.addEventListener('click', handleSave);
+            saveBtn.addEventListener('touchend', handleSave);
+        }
+    }, 100);
+});
 
             // Filtres
             const bindFilter = (id, cat) => {
