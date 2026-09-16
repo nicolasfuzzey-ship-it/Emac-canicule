@@ -1,13 +1,14 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <!-- SDK Firebase App & Realtime Database -->
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>À l'Ombre — IMT Mines Albi</title>
     
+    <!-- SDK Firebase (compatibilité globale) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
@@ -38,29 +39,7 @@
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col md:h-screen md:overflow-hidden">
-    <script type="module">
-  // Import the functions you need from the SDKs you need
-      import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
-      import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-analytics.js";
-  // TODO: Add SDKs for Firebase products that you want to use
-  // https://firebase.google.com/docs/web/setup#available-libraries
 
-  // Your web app's Firebase configuration
-  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-      const firebaseConfig = {
-        apiKey: "AIzaSyBsUql2nJBf3x5HuMQW7CN8qK1aix2P0O0",
-        authDomain: "emacanicule.firebaseapp.com",
-        projectId: "emacanicule",
-        storageBucket: "emacanicule.firebasestorage.app",
-        messagingSenderId: "563331434566",
-        appId: "1:563331434566:web:0242987b0bb27b78486247",
-        measurementId: "G-LL1YJJ8X0X"
-      };
-
-  // Initialize Firebase
-      const app = initializeApp(firebaseConfig);
-      const analytics = getAnalytics(app);
-    </script>
     <!-- Bannière d'Alerte -->
     <div id="alert-banner" class="bg-red-600 text-white px-4 py-2.5 shadow-md flex items-center justify-center relative z-20 shrink-0">
         <div class="absolute inset-0 bg-red-500 animate-ping opacity-20"></div>
@@ -201,65 +180,24 @@
 
     <!-- Script Application -->
     <script>
-        // 1. Configuration Firebase (Remplacez avec vos clés obtenues sur la console Firebase)
-    const firebaseConfig = {
-        apiKey: "VOTRE_API_KEY",
-        authDomain: "votre-projet.firebaseapp.com",
-        databaseURL: "https://votre-projet-default-rtdb.firebaseio.com",
-        projectId: "votre-projet",
-        storageBucket: "votre-projet.appspot.com",
-        messagingSenderId: "123456789",
-        appId: "1:123456789:web:abcdef"
-    };
-    
-    // Initialisation de Firebase
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-    const markersRef = db.ref('markers');
-    
-    // 2. Écoute en Temps Réel (Remplace loadMarkers et re-rendu automatique)
-    // Chaque fois qu'un utilisateur ajoute ou supprime un point, cette fonction s'exécute chez TOUS les visiteurs connectés.
-    markersRef.on('value', (snapshot) => {
-        const data = snapshot.val();
-        markersData = [];
-        
-        if (data) {
-            // Transformation de l'objet Firebase en tableau
-            Object.keys(data).forEach(key => {
-                markersData.push({ id: key, ...data[key] });
-            });
-        }
-        
-        // Mise à jour de l'affichage de la carte et de la liste
-        renderMarkers();
-    });
-    
-    // 3. Ajouter un marqueur dans la base de données
-    // Remplacez la fonction de sauvegarde dans map.on('click') par :
-    function addMarkerToFirebase(markerObject) {
-        // Push génère un identifiant unique côté serveur
-        markersRef.push({
-            coords: markerObject.coords,
-            cat: markerObject.cat,
-            title: markerObject.title,
-            note: markerObject.note,
-            createdAt: Date.now()
-        });
-    }
-    
-    // 4. Supprimer un marqueur de la base de données
-    // Modifiez la gestion du clic sur le bouton de suppression dans renderMarkers() :
-    document.querySelectorAll('.delete-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const id = e.currentTarget.dataset.id;
-            // Supprime le nœud spécifique dans Firebase
-            db.ref(`markers/${id}`).remove();
-        });
-    });
         document.addEventListener('DOMContentLoaded', () => {
-            const campusCoords = [43.9222, 2.1778];
-            const STORAGE_KEY = 'al_ombre_user_markers';
+            // Configuration Firebase réelles
+            const firebaseConfig = {
+                apiKey: "AIzaSyBsUql2nJBf3x5HuMQW7CN8qK1aix2P0O0",
+                authDomain: "emacanicule.firebaseapp.com",
+                databaseURL: "https://emacanicule-default-rtdb.europe-west1.firebasedatabase.app",
+                projectId: "emacanicule",
+                storageBucket: "emacanicule.firebasestorage.app",
+                messagingSenderId: "563331434566",
+                appId: "1:563331434566:web:0242987b0bb27b78486247"
+            };
 
+            // Initialisation
+            firebase.initializeApp(firebaseConfig);
+            const db = firebase.database();
+            const markersRef = db.ref('markers');
+
+            const campusCoords = [43.9222, 2.1778];
             const CATEGORIES = {
                 water: { label: "Point d'eau", icon: 'fa-droplet', color: 'text-blue-600', bg: 'bg-blue-500', border: 'border-blue-500' },
                 shade: { label: "Zone de fraîcheur / Ombre", icon: 'fa-tree', color: 'text-green-600', bg: 'bg-green-500', border: 'border-green-500' },
@@ -275,7 +213,7 @@
                 kiosk: L.layerGroup()
             };
 
-            // 1. Navigation
+            // Navigation
             const tabs = document.querySelectorAll('.tab-btn');
             const views = document.querySelectorAll('.view-content');
 
@@ -294,7 +232,7 @@
                 });
             });
 
-            // 2. Initialisation Carte
+            // Initialisation Carte
             const map = L.map('map', { center: campusCoords, zoom: 17, minZoom: 15, maxZoom: 19, zoomControl: false });
             L.control.zoom({ position: 'topright' }).addTo(map);
 
@@ -312,24 +250,17 @@
                 });
             };
 
-            function loadMarkers() {
-                const saved = localStorage.getItem(STORAGE_KEY);
-                if (saved) {
-                    try { markersData = JSON.parse(saved); } catch (e) { markersData = []; }
-                } else {
-                    markersData = [
-                        { id: '1', coords: [43.9225, 2.1782], cat: 'water', title: "Fontaine Cour d'Honneur", note: "Eau fraîche 24/7." },
-                        { id: '2', coords: [43.9231, 2.1748], cat: 'shade', title: "Bosquet Nord", note: "Zone ombragée avec bancs." },
-                        { id: '3', coords: [43.9205, 2.1778], cat: 'heat', title: "Parking Sud", note: "Plein soleil l'après-midi." }
-                    ];
-                    saveMarkers();
+            // Écoute des données Firebase en temps réel pour tous les utilisateurs
+            markersRef.on('value', (snapshot) => {
+                const data = snapshot.val();
+                markersData = [];
+                if (data) {
+                    Object.keys(data).forEach(key => {
+                        markersData.push({ id: key, ...data[key] });
+                    });
                 }
                 renderMarkers();
-            }
-
-            function saveMarkers() {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(markersData));
-            }
+            });
 
             function renderMarkers() {
                 Object.values(layerGroups).forEach(g => g.clearLayers());
@@ -339,7 +270,7 @@
                 document.getElementById('signalement-count').textContent = markersData.length;
 
                 if (markersData.length === 0) {
-                    listEl.innerHTML = '<li class="text-slate-400 italic text-xs">Aucun signalement. Cliquez sur la carte pour en ajouter un !</li>';
+                    listEl.innerHTML = '<li class="text-slate-400 italic text-xs">Aucun signalement enregistre. Cliquez sur la carte pour en ajouter un !</li>';
                     return;
                 }
 
@@ -375,16 +306,16 @@
                     listEl.appendChild(li);
                 });
 
+                // Suppression directe sur Firebase
                 document.querySelectorAll('.delete-btn').forEach(btn => {
                     btn.addEventListener('click', (e) => {
                         const id = e.currentTarget.dataset.id;
-                        markersData = markersData.filter(m => m.id !== id);
-                        saveMarkers();
-                        renderMarkers();
+                        db.ref(`markers/${id}`).remove();
                     });
                 });
             }
 
+            // Ajout au clic sur la carte
             map.on('click', (e) => {
                 const formHtml = `
                     <div class="p-2 space-y-2 min-w-[180px]">
@@ -422,20 +353,22 @@
                             const title = document.getElementById('new-title').value.trim() || CATEGORIES[cat].label;
                             const note = document.getElementById('new-note').value.trim();
 
-                           markersRef.push({
+                            // Envoi vers Firebase
+                            markersRef.push({
                                 coords: [e.latlng.lat, e.latlng.lng],
                                 cat: cat,
                                 title: title,
-                                note: note
+                                note: note,
+                                createdAt: Date.now()
                             });
-                            map.closePopup();
-                            renderMarkers();
+                            
                             map.closePopup();
                         });
                     }
                 }, 50);
             });
 
+            // Filtres
             const bindFilter = (id, cat) => {
                 document.getElementById(id).addEventListener('change', (e) => {
                     if (e.target.checked) map.addLayer(layerGroups[cat]);
@@ -447,7 +380,7 @@
             bindFilter('filter-heat', 'heat');
             bindFilter('filter-kiosk', 'kiosk');
 
-            // 3. Météo API
+            // Météo API
             const seuilInput = document.getElementById('seuil');
             const seuilVal = document.getElementById('seuilVal');
             let cachedForecast = null;
@@ -516,7 +449,6 @@
                 });
             }
 
-            loadMarkers();
             fetchMeteoData();
         });
     </script>
