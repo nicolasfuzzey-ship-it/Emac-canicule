@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>À l'Ombre — IMT Mines Albi</title>
+    <title> EmacCanicule - IMT Mines Albi</title>
     
     <!-- SDK Firebase (compatibilité globale) -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -58,7 +58,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between py-2 md:py-0 md:h-16">
             <div class="flex items-center space-x-3 mb-2 md:mb-0">
                 <img src="https://upload.wikimedia.org/wikipedia/commons/e/e4/Logo_IMT_Mines_Albi.svg" alt="IMT Mines Albi" class="h-7 sm:h-8 w-auto" onerror="this.src='https://placehold.co/100x40/ffffff/000000?text=IMT+Albi'">
-                <span class="text-lg sm:text-xl font-bold text-slate-800">À l'Ombre</span>
+                <span class="text-lg sm:text-xl font-bold text-slate-800">EmacCanicule</span>
             </div>
             <nav class="flex w-full md:w-auto justify-around md:justify-end space-x-1 sm:space-x-4 h-12 md:h-full border-t md:border-t-0 border-slate-100">
                 <button class="tab-btn active h-full px-2 flex items-center text-slate-600 hover:text-slate-900 font-medium text-xs sm:text-sm transition-colors" data-view="carte">
@@ -263,57 +263,123 @@
             });
 
             function renderMarkers() {
-                Object.values(layerGroups).forEach(g => g.clearLayers());
-                const listEl = document.getElementById('markerList');
-                listEl.innerHTML = '';
+    Object.values(layerGroups).forEach(g => g.clearLayers());
+    const listEl = document.getElementById('markerList');
+    listEl.innerHTML = '';
 
-                document.getElementById('signalement-count').textContent = markersData.length;
+    document.getElementById('signalement-count').textContent = markersData.length;
 
-                if (markersData.length === 0) {
-                    listEl.innerHTML = '<li class="text-slate-400 italic text-xs">Aucun signalement enregistre. Cliquez sur la carte pour en ajouter un !</li>';
-                    return;
-                }
+    if (markersData.length === 0) {
+        listEl.innerHTML = '<li class="text-slate-400 italic text-xs">Aucun signalement enregistré. Cliquez sur la carte pour en ajouter un !</li>';
+        return;
+    }
 
-                markersData.forEach(item => {
-                    const cat = CATEGORIES[item.cat] || CATEGORIES.shade;
-                    
-                    const marker = L.marker(item.coords, { icon: createIcon(item.cat) });
-                    marker.bindPopup(`
-                        <div class="p-1">
-                            <h3 class="font-bold text-slate-800 text-xs sm:text-sm flex items-center gap-2">
-                                <i class="fa-solid ${cat.icon} ${cat.color}"></i> ${item.title}
-                            </h3>
-                            ${item.note ? `<p class="text-[11px] sm:text-xs text-slate-600 mt-1">${item.note}</p>` : ''}
-                        </div>
-                    `);
-                    if (layerGroups[item.cat]) {
-                        marker.addTo(layerGroups[item.cat]);
-                    }
+    markersData.forEach(item => {
+        const cat = CATEGORIES[item.cat] || CATEGORIES.shade;
+        
+        const marker = L.marker(item.coords, { icon: createIcon(item.cat) });
+        
+        // Contenu du popup avec mode affichage et mode édition
+        const popupContent = `
+            <div id="popup-display-${item.id}" class="p-1 min-w-[180px]">
+                <h3 class="font-bold text-slate-800 text-xs sm:text-sm flex items-center gap-2">
+                    <i class="fa-solid ${cat.icon} ${cat.color}"></i> ${item.title}
+                </h3>
+                ${item.note ? `<p class="text-[11px] sm:text-xs text-slate-600 mt-1">${item.note}</p>` : '<p class="text-[11px] text-slate-400 italic mt-1">Aucune description</p>'}
+                <button class="edit-btn text-xs font-semibold text-blue-600 hover:text-blue-800 mt-2 flex items-center gap-1" data-id="${item.id}">
+                    <i class="fa-solid fa-pen text-[10px]"></i> Modifier
+                </button>
+            </div>
 
-                    const li = document.createElement('li');
-                    li.className = 'p-2.5 bg-slate-50 border border-slate-200 rounded-xl flex items-start justify-between gap-2';
-                    li.innerHTML = `
-                        <div class="flex-1">
-                            <div class="font-semibold text-slate-800 flex items-center text-xs">
-                                <i class="fa-solid ${cat.icon} ${cat.color} mr-1.5"></i> ${item.title}
-                            </div>
-                            ${item.note ? `<div class="text-[11px] text-slate-500 mt-0.5">${item.note}</div>` : ''}
-                        </div>
-                        <button class="delete-btn text-slate-400 hover:text-red-600 p-1 transition-colors" data-id="${item.id}" title="Supprimer">
-                            <i class="fa-solid fa-trash-can text-xs"></i>
-                        </button>
-                    `;
-                    listEl.appendChild(li);
-                });
+            <div id="popup-edit-${item.id}" class="p-1 min-w-[180px] hidden space-y-2">
+                <h4 class="font-bold text-slate-800 text-xs">Modifier le signalement</h4>
+                <input type="text" id="edit-title-${item.id}" class="w-full text-xs p-1.5 border border-slate-300 rounded-lg" value="${item.title.replace(/"/g, '&quot;')}">
+                <textarea id="edit-note-${item.id}" class="w-full text-xs p-1.5 border border-slate-300 rounded-lg" placeholder="Note / Infos complémentaires" rows="2">${item.note || ''}</textarea>
+                <div class="flex gap-1">
+                    <button class="save-edit-btn w-full bg-blue-600 text-white text-xs font-semibold py-1 rounded-lg hover:bg-blue-700 transition-colors" data-id="${item.id}">
+                        Enregistrer
+                    </button>
+                    <button class="cancel-edit-btn w-full bg-slate-200 text-slate-700 text-xs font-semibold py-1 rounded-lg hover:bg-slate-300 transition-colors" data-id="${item.id}">
+                        Annuler
+                    </button>
+                </div>
+            </div>
+        `;
 
-                // Suppression directe sur Firebase
-                document.querySelectorAll('.delete-btn').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        const id = e.currentTarget.dataset.id;
-                        db.ref(`markers/${id}`).remove();
-                    });
+        marker.bindPopup(popupContent);
+
+        // Écoute de l'ouverture du popup pour attacher les événements d'édition
+        marker.on('popupopen', () => {
+            const displayDiv = document.getElementById(`popup-display-${item.id}`);
+            const editDiv = document.getElementById(`popup-edit-${item.id}`);
+            const editBtn = displayDiv?.querySelector('.edit-btn');
+            const saveBtn = editDiv?.querySelector('.save-edit-btn');
+            const cancelBtn = editDiv?.querySelector('.cancel-edit-btn');
+
+            if (editBtn) {
+                editBtn.addEventListener('click', () => {
+                    displayDiv.classList.add('hidden');
+                    editDiv.classList.remove('hidden');
                 });
             }
+
+            if (cancelBtn) {
+                cancelBtn.addEventListener('click', () => {
+                    editDiv.classList.add('hidden');
+                    displayDiv.classList.remove('hidden');
+                });
+            }
+
+            if (saveBtn) {
+                const handleUpdate = (e) => {
+                    e.preventDefault();
+                    const newTitle = document.getElementById(`edit-title-${item.id}`).value.trim() || item.title;
+                    const newNote = document.getElementById(`edit-note-${item.id}`).value.trim();
+
+                    // Mise à jour de l'entrée dans Firebase
+                    db.ref(`markers/${item.id}`).update({
+                        title: newTitle,
+                        note: newNote,
+                        updatedAt: Date.now()
+                    });
+
+                    marker.closePopup();
+                };
+
+                saveBtn.addEventListener('click', handleUpdate);
+                saveBtn.addEventListener('touchend', handleUpdate);
+            }
+        });
+
+        if (layerGroups[item.cat]) {
+            marker.addTo(layerGroups[item.cat]);
+        }
+
+        // Ajout dans la liste latérale
+        const li = document.createElement('li');
+        li.className = 'p-2.5 bg-slate-50 border border-slate-200 rounded-xl flex items-start justify-between gap-2';
+        li.innerHTML = `
+            <div class="flex-1">
+                <div class="font-semibold text-slate-800 flex items-center text-xs">
+                    <i class="fa-solid ${cat.icon} ${cat.color} mr-1.5"></i> ${item.title}
+                </div>
+                ${item.note ? `<div class="text-[11px] text-slate-500 mt-0.5">${item.note}</div>` : ''}
+            </div>
+            <button class="delete-btn text-slate-400 hover:text-red-600 p-1 transition-colors" data-id="${item.id}" title="Supprimer">
+                <i class="fa-solid fa-trash-can text-xs"></i>
+            </button>
+        `;
+        listEl.appendChild(li);
+    });
+
+    // Suppression directe sur Firebase
+    document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const id = e.currentTarget.dataset.id;
+            db.ref(`markers/${id}`).remove();
+        });
+    });
+}
 
             // Ajout au clic sur la carte
             // Remplacez le bloc map.on('click') par celui-ci :
